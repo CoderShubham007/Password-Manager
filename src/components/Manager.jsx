@@ -1,37 +1,63 @@
 import React from 'react'
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 const Manager = () => {
     const [showPassword, setShowPassword] = useState(false);
     const eyeButton = useRef();
+    const [form, setForm] = useState({
+        site: "",
+        username: "",
+        password: ""
+    });
+    const [passwordArray, setPasswordArray] = useState([])
+
+    useEffect(() => {
+        let passwords = localStorage.getItem("passwords");
+        if (passwords) {
+            setPasswordArray(JSON.parse(passwords));
+        }
+    }, []);
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
-    };
+    }
 
-    const savePassword = () => {
-      
+    const handleChange = (e) => {
+        setForm({...form, [e.target.name]: e.target.value});
+    }
+
+    const savePassword = (e) => {
+        e.preventDefault();
+        
+        setPasswordArray([...passwordArray, form]);
+        localStorage.setItem("passwords", JSON.stringify([...passwordArray, form]));
+
+        setForm({
+            site: "",
+            username: "",
+            password: ""
+        });
     }
     
     return (
         <>
             {/* Form */}
             <div className="container px-8 py-2">
-                <form className='max-w-[600px] mx-auto'>
+                <form className='max-w-[600px] mx-auto' onSubmit={savePassword}>
                     <div className="flex flex-col text-center w-full">
                         <h1 className="sm:text-3xl text-2xl font-medium title-font mb-4 text-gray-900">Password Manager OP</h1>
                     </div>
                     <label className="input input-bordered flex items-center mb-5">
                         Site URL &nbsp;
-                        <input type="text" className="grow" />
+                        <input type="text" value={form.site} name='site' onChange={handleChange} className="grow" required />
                     </label>
                     <label className="input input-bordered flex items-center mb-5">
                         Username &nbsp;
-                        <input type="text" className="grow" />
+                        <input type="text" value={form.username} name='username' onChange={handleChange} className="grow" required />
                     </label>
                     <label className="input input-bordered flex items-center mb-5">
                         Password &nbsp;
-                        <input type={showPassword ? "text" : "password"} className="grow" />
+                        <input type={showPassword ? "text" : "password"} value={form.password} name='password' onChange={handleChange} className="grow" required />
                         <button type='button' ref={eyeButton} onClick={togglePasswordVisibility}>
                             {showPassword ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -46,18 +72,18 @@ const Manager = () => {
                         </button>
                     </label>
                     <div>
-                        <button type='submit' onClick={savePassword} className="btn btn-active btn-neutral w-full">Success</button>
+                        <button type='submit' className="btn btn-active btn-neutral w-full">Success</button>
                     </div>
                 </form>
             </div>
             {/* Table */}
             <div className='container mb-5 min-h-72'>
                 <h2 className="sm:text-2xl text-xl title-font font-medium text-gray-900 mt-4 mb-4 text-center">Your Passwords</h2>
-                <div className="overflow-x-auto max-w-[1000px] mx-auto">
+                {passwordArray.length === 0 && <div><h3 className='text-center'>No Passwords Avialable Yet!</h3></div>}
+                {passwordArray.length !== 0 && <div className="overflow-x-auto max-w-[1000px] mx-auto">
                     <table className="table">
                         <thead>
                             <tr>
-                                <th></th>
                                 <th>Site</th>
                                 <th>Username</th>
                                 <th>Password</th>
@@ -65,11 +91,13 @@ const Manager = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="bg-base-200">
-                                <th>1</th>
-                                <td>Cy Ganderton</td>
-                                <td>Quality Control Specialist</td>
-                                <td>Blue</td>
+                            {passwordArray.map( (item, index) => {
+                                return (<tr key={index} className="bg-base-200">
+                                <td>
+                                    <a href={item.site} target='_blank'>{item.site}</a>
+                                </td>
+                                <td>{item.username}</td>
+                                <td>{item.password}</td>
                                 <td>
                                     <button className='me-3 text-purple-600'>
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -82,10 +110,11 @@ const Manager = () => {
                                         </svg>
                                     </button>
                                 </td>
-                            </tr>
+                            </tr>)
+                            })}
                         </tbody>
                     </table>
-                </div>
+                </div>}
             </div>
         </>
     )
