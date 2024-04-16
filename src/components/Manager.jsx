@@ -40,17 +40,8 @@ const Manager = () => {
             username: "",
             password: ""
         });
-    }
-    
-    const editPassword = (id) => {
-        console.log(id);
-    }
-    
-    const deletePassword = (id) => {
-        setPasswordArray(passwordArray.filter(item => item.id !== id));
-        localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)));
 
-        toast.success('Deleted Successfully!', {
+        toast.success('Saved Successfully!', {
             position: "top-right",
             autoClose: 5000,
             hideProgressBar: false,
@@ -60,6 +51,29 @@ const Manager = () => {
             progress: undefined,
             theme: "light"
         });
+    }
+    
+    const editPassword = (id) => {
+        setForm(passwordArray.filter(item => item.id === id)[0]);
+        setPasswordArray(passwordArray.filter(item => item.id !== id));
+    }
+    
+    const deletePassword = (id) => {
+        if (confirm("Are your Sure?\nYou want to delete it!")) {
+            setPasswordArray(passwordArray.filter(item => item.id !== id));
+            localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)));
+    
+            toast.success('Deleted Successfully!', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light"
+            });
+        }
     }
 
     const copyText = (e, text) => {
