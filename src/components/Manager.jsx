@@ -14,11 +14,14 @@ const Manager = () => {
     });
     const [passwordArray, setPasswordArray] = useState([])
 
+    const getPasswords = async () => {
+        let request = await fetch("http://localhost:3000/");
+        let passwords = await request.json();
+        setPasswordArray(passwords);
+    }
+    
     useEffect(() => {
-        let passwords = localStorage.getItem("passwords");
-        if (passwords) {
-            setPasswordArray(JSON.parse(passwords));
-        }
+        getPasswords();
     }, []);
 
     const togglePasswordVisibility = () => {
@@ -29,39 +32,59 @@ const Manager = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     }
 
-    const savePassword = (e) => {
+    const savePassword = async (e) => {
         e.preventDefault();
 
-        setPasswordArray([...passwordArray, {...form, id: uuidv4()}]);
-        localStorage.setItem("passwords", JSON.stringify([...passwordArray, {...form, id: uuidv4()}]));
-        
-        setForm({
-            site: "",
-            username: "",
-            password: ""
-        });
+        if (form.site.length > 3 && form.username.length > 3 && form.password.length > 3) {
 
-        toast.success('Saved Successfully!', {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light"
-        });
+            await fetch("http://localhost:3000/", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ id: form.id }) 
+            });
+
+            await fetch("http://localhost:3000/", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({...form, id: uuidv4()}) 
+            });
+            
+            // getPasswords();
+
+            setForm({
+                site: "",
+                username: "",
+                password: ""
+            });
+    
+            toast.success('Saved Successfully!', {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light"
+            });
+        }
     }
     
     const editPassword = (id) => {
-        setForm(passwordArray.filter(item => item.id === id)[0]);
+        setForm({...passwordArray.filter(item => item.id === id)[0], id: id});
         setPasswordArray(passwordArray.filter(item => item.id !== id));
     }
     
-    const deletePassword = (id) => {
+    const deletePassword = async (id) => {
         if (confirm("Are your Sure?\nYou want to delete it!")) {
+
             setPasswordArray(passwordArray.filter(item => item.id !== id));
-            localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)));
+
+            let response = await fetch("http://localhost:3000/", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" }, 
+                body: JSON.stringify({ id }) 
+            });
     
             toast.success('Deleted Successfully!', {
                 position: "top-right",
